@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 from datetime import datetime
 
@@ -71,7 +71,7 @@ def login():
 # healthcheck
 @app.route("/")
 def home():
-    return "Backend is running"
+    return render_template("index.html")
 
 
 if __name__ == "__main__":
