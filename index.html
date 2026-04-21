@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Submit Alert</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #111;
+            color: white;
+        }
+
+        /* Login box (top-right corner) */
+        .login-box {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #1e1e1e;
+            padding: 10px;
+            border-radius: 8px;
+            width: 200px;
+        }
+
+        .login-box input {
+            width: 100%;
+            margin-top: 5px;
+            padding: 6px;
+            border: none;
+            border-radius: 4px;
+            background: #2a2a2a;
+            color: white;
+        }
+
+        .login-box button {
+            width: 100%;
+            margin-top: 5px;
+            padding: 6px;
+            border: none;
+            border-radius: 4px;
+            background: #00c3ff;
+            cursor: pointer;
+        }
+
+        .login-status {
+            font-size: 12px;
+            color: #aaa;
+            margin-top: 5px;
+        }
+
+        /* Main form */
+        .container {
+            max-width: 500px;
+            margin: 100px auto;
+            background: #1e1e1e;
+            padding: 25px;
+            border-radius: 10px;
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        input, textarea, select, button {
+            width: 100%;
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+        }
+
+        input, textarea, select {
+            background: #2a2a2a;
+            color: white;
+        }
+
+        button.submit {
+            background: #00c3ff;
+            color: black;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button.submit:hover {
+            background: #00a0d0;
+        }
+
+        .status {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #aaa;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<!-- 🔐 Login in corner -->
+<div class="login-box">
+    <input type="text" id="login" placeholder="Login">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="login()">Login</button>
+    <div class="login-status" id="loginStatus"></div>
+</div>
+
+<!-- 🧨 Public alert form -->
+<div class="container">
+    <h2>🚨 Submit Alert</h2>
+
+    <input type="text" id="title" placeholder="Title">
+    <textarea id="description" placeholder="Short description"></textarea>
+    <input type="text" id="address" placeholder="Address">
+
+    <select id="level">
+        <option value="info">Info</option>
+        <option value="warning">Warning</option>
+        <option value="emergency">Emergency</option>
+    </select>
+
+    <button class="submit" onclick="submitAlert()">Submit Alert</button>
+
+    <div class="status" id="status"></div>
+</div>
+
+<script>
+    const API = "http://127.0.0.1:5000";
+    // 🔐 Login logic (placeholder)
+    async function login() {
+        const login = document.getElementById("login").value;
+        const password = document.getElementById("password").value;
+
+        try {
+            // Replace with real backend auth
+            if (login === "admin" && password === "admin") {
+                // redirect to dashboard
+                window.location.href = "responder.html";
+            } else {
+                document.getElementById("loginStatus").textContent = "Invalid login";
+            }
+        } catch (err) {
+            document.getElementById("loginStatus").textContent = "Error";
+        }
+    }
+
+    // 🧨 Public alert submission
+    async function submitAlert() {
+        const alert = {
+            title: document.getElementById("title").value,
+            description: document.getElementById("description").value,
+            address: document.getElementById("address").value,
+            level: document.getElementById("level").value
+        };
+
+        try {
+            const response = await fetch(API +"/api/alerts", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(alert)
+            });
+
+            if (response.ok) {
+                document.getElementById("status").textContent = "Alert submitted!";
+            } else {
+                document.getElementById("status").textContent = "Error submitting alert";
+            }
+        } catch (err) {
+            document.getElementById("status").textContent = "Connection error";
+            console.error(err);
+        }
+    }
+</script>
+
+</body>
+</html>

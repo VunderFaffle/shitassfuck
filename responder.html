@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Emergency Alert System</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #111;
+            color: white;
+            transition: background-color 0.3s;
+        }
+
+        header {
+            padding: 20px;
+            text-align: center;
+            background-color: #222;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        #alerts {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            background-color: #1e1e1e;
+            border-left: 5px solid #00c3ff;
+        }
+
+        .alert.emergency {
+            border-left: 5px solid red;
+        }
+
+        .title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .description {
+            margin-top: 5px;
+        }
+
+        .address {
+            margin-top: 8px;
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        .controls {
+            margin-top: 10px;
+        }
+
+        button {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .resolve-btn {
+            background: red;
+            color: white;
+        }
+
+        .resolve-btn:hover {
+            background: darkred;
+        }
+
+        /* Flash effect */
+        .flash {
+            animation: flashBg 1s infinite;
+        }
+
+        @keyframes flashBg {
+            0% { background-color: #300; }
+            50% { background-color: #111; }
+            100% { background-color: #300; }
+        }
+
+        #status {
+            text-align: center;
+            padding: 10px;
+            font-size: 14px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    🚨 Emergency Alert System
+</header>
+
+<div id="status">Loading...</div>
+
+<div id="alerts"></div>
+
+<script>
+    const API = "http://127.0.0.1:5000";
+
+    const alertsContainer = document.getElementById("alerts");
+    const statusText = document.getElementById("status");
+
+    // auth
+    function getToken() {
+        return localStorage.getItem("token");
+    }
+
+    async function loginPrompt() {
+        const login = prompt("Login:");
+        const password = prompt("Password:");
+
+        const res = await fetch(API + "/api/login", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ login, password })
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+            localStorage.setItem("token", data.token);
+            return true;
+        } else {
+            alert("Invalid credentials");
+            return false;
+        }
+    }
+
+    // alert update
+    async function fetchAlerts() {
+        try {
+            const res = await fetch(API + "/api/alerts");
+            const data = await res.json();
+
+            renderAlerts(data);
+            statusText.textContent = "Last update: " + new Date().toLocaleTimeString();
+        } catch (err) {
+            statusText.textContent = "Connection error";
+        }
+    }
+
+    // render
+    function renderAlerts(alerts) {
+        alertsContainer.innerHTML = "";
+
+        let hasEmergency = false;
+
+        alerts.forEach(alert => {
+            const div = document.createElement("div");
+            div.className = "alert";
+
+            if (alert.level === "emergency") {
+                div.classList.add("emergency");
+                hasEmergency = true;
+            }
+
+            div.innerHTML = `
+                <div class="title">${alert.title}</div>
+                <div class="description">${alert.description}</div>
+                <div class="address">📍 ${alert.address}</div>
+                <div class="controls">
+                    <button class="resolve-btn" onclick="resolveAlert(${alert.id})">
+                        ✅ Resolve
+                    </button>
+                </div>
+            `;
+
+            alertsContainer.appendChild(div);
+        });
+
+        toggleEmergencyMode(hasEmergency);
+    }
+
+    // resolve button
+    async function resolveAlert(id) {
+        let token = getToken();
+
+        if (!token) {
+            const success = await loginPrompt();
+            if (!success) return;
+            token = getToken();
+        }
+
+        try {
+            const res = await fetch(API + "/api/alerts/" + id, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": "Bearer " + token
+                }
+            });
+
+            if (res.ok) {
+                fetchAlerts();
+            } else {
+                alert("Failed to resolve alert");
+            }
+        } catch (err) {
+            alert("Connection error");
+        }
+    }
+
+    // visuals
+    function toggleEmergencyMode(enabled) {
+        if (enabled) {
+            document.body.classList.add("flash");
+        } else {
+            document.body.classList.remove("flash");
+        }
+    }
+
+    setInterval(fetchAlerts, 3000);
+    fetchAlerts();
+</script>
+
+</body>
+</html>
